@@ -17,7 +17,7 @@ from hypothesis.strategies import booleans, integers, one_of, text
 
 
 # Hypothesis doesn't have any() strategy that generates arbitrary value of arbitrary type.
-#jHere, I use one_of() strategy to generate arbitrary value from a couple of primitive strategies.
+# Here, I use one_of() strategy to generate arbitrary value from a couple of primitive strategies.
 @given(one_of(text(), booleans(), integers()))
 @settings(max_examples=100, verbosity=Verbosity.verbose)
 def test_prop(s):
