@@ -13,10 +13,20 @@
 # limitations under the License.
 
 from collections import defaultdict
+from typing import Any, Dict
 
 from hypothesis import event, given
-from hypothesis.strategies import (booleans, characters, composite, integers,
-                                   lists, one_of, sampled_from, text, tuples)
+from hypothesis.strategies import (
+    booleans,
+    characters,
+    composite,
+    integers,
+    lists,
+    one_of,
+    sampled_from,
+    text,
+    tuples,
+)
 
 
 @composite
@@ -24,27 +34,29 @@ def keys(draw):
     fixed = sampled_from(range(1, 11))
     return draw(one_of(fixed, integers()))
 
+
 @composite
 def vals(draw):
     return draw(booleans() | characters() | integers() | text())
+
 
 # In order to print the statistics from `event`, you need to specify
 # Hypothesis' statistics option: `--hypothesis-show-statistics`.
 # See details here: https://hypothesis.readthedocs.io/en/latest/details.html#statistics
 @given(lists(tuples(keys(), vals())))
-def test_dupes(kv):
+def test_dupes(kv: list[tuple[int, Any]]):
     m = {k: v for k, v in kv}
-    [m[k] for k, _ in kv] # I want non existing key to be crashed
+    [m[k] for k, _ in kv]  # I want non existing key to be crashed
     range_min, range_max = to_range(5, len(kv) - len(ukey(kv)))
     event(f"dupes: {range_min}-{range_max}")
 
 
-def to_range(m, n):
+def to_range(m, n: int) -> tuple[int, int]:
     base = n // m
-    return (base*m, (base+1)*m)
+    return (base * m, (base + 1) * m)
 
 
-def ukey(lt):
+def ukey(lt: list[tuple[int, Any]]) -> Dict[int, list[Any]]:
     """ukeysort sorts list of tuples based on nth element in tuple and removed
     duplicated elements from it.
 

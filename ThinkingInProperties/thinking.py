@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-def biggest(l: list):
+
+def biggest(l: list[int]) -> list[int] | int:
     if len(l) == 0:
         return l[-1:]
     if len(l) == 1:
