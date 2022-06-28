@@ -17,6 +17,7 @@ from typing import Any, Dict
 
 from hypothesis import event, given
 from hypothesis.strategies import (
+    binary,
     booleans,
     characters,
     composite,
@@ -49,6 +50,20 @@ def test_dupes(kv: list[tuple[int, Any]]):
     [m[k] for k, _ in kv]  # I want non existing key to be crashed
     range_min, range_max = to_range(5, len(kv) - len(ukey(kv)))
     event(f"dupes: {range_min}-{range_max}")
+
+
+# TODO: confirm if there's some function that corresponds to Erlang's is_binary/1.
+@given(binary())
+def test_collect1(b):
+    size = len(b)
+    event(f"size: {size}")
+
+
+# TODO: confirm if there's some function that corresponds to Erlang's is_binary/1.
+@given(binary())
+def test_collect2(b):
+    range_min, range_max = to_range(10, len(b))
+    event(f"size: {range_min}-{range_max}")
 
 
 def to_range(m, n: int) -> tuple[int, int]:
