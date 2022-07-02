@@ -13,12 +13,14 @@
 # limitations under the License.
 
 from collections import defaultdict
+from enum import Enum
 from typing import Any, Dict
 
 from hypothesis import event, given
 from hypothesis.strategies import (
     binary,
     booleans,
+    builds,
     characters,
     composite,
     integers,
@@ -64,6 +66,34 @@ def test_collect1(b):
 def test_collect2(b):
     range_min, range_max = to_range(10, len(b))
     event(f"size: {range_min}-{range_max}")
+
+
+class Suit(Enum):
+    CLUB = 1
+    DIAMOND = 2
+    HEART = 3
+    SPADE = 4
+
+
+class Card:
+    def __init__(self, suit: Suit, num: int):
+        self.suit = suit
+        self.num = num
+
+    def __str__(self):
+        return f"Card({self.suit}, {self.num})"
+
+
+@composite
+def hand(draw):
+    s = draw(sampled_from(Suit))
+    n = draw(sampled_from(range(1, 14)))
+    return Card(s, n)
+
+
+@given(hand())
+def test_aggregate(h):
+    event(h)
 
 
 def to_range(m, n: int) -> tuple[int, int]:
