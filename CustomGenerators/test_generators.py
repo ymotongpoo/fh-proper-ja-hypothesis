@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict
 
@@ -20,7 +21,6 @@ from hypothesis import event, given
 from hypothesis.strategies import (
     binary,
     booleans,
-    builds,
     characters,
     composite,
     integers,
@@ -75,25 +75,37 @@ class Suit(Enum):
     SPADE = 4
 
 
+@dataclass(frozen=True)
 class Card:
-    def __init__(self, suit: Suit, num: int):
-        self.suit = suit
-        self.num = num
+    suit: Suit
+    num: int
 
     def __str__(self):
         return f"Card({self.suit}, {self.num})"
 
+    def __repr__(self):
+        return f"Card({self.suit}, {self.num})"
+
 
 @composite
-def hand(draw):
+def card(draw):
     s = draw(sampled_from(Suit))
     n = draw(sampled_from(range(1, 14)))
     return Card(s, n)
 
 
+@composite
+def hand(draw):
+    return draw(lists(card(), min_size=5, max_size=5))
+
+
 @given(hand())
 def test_aggregate(h):
-    event(h)
+    # converting to str is the work around for events to handle
+    # lists/tuples.
+    # https://github.com/HypothesisWorks/hypothesis/issues/3393
+    s = str(h)
+    event(s)
 
 
 def to_range(m, n: int) -> tuple[int, int]:
