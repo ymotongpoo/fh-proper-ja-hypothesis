@@ -15,7 +15,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 from hypothesis import event, given
 from hypothesis.strategies import (
@@ -68,6 +68,25 @@ def test_collect2(b):
     event(f"size: {range_min}-{range_max}")
 
 
+def to_range(m, n: int) -> tuple[int, int]:
+    base = n // m
+    return (base * m, (base + 1) * m)
+
+
+def ukey(lt: list[tuple[int, Any]]) -> Dict[int, list[Any]]:
+    """ukeysort sorts list of tuples based on nth element in tuple and removed
+    duplicated elements from it.
+
+    Args:
+        lt (List[Tuple])): List of tuples
+    """
+    ret = defaultdict(list)
+    for e in lt:
+        ret[e[0]].append(e[1])
+    ret = dict(ret)
+    return ret
+
+
 class Suit(Enum):
     CLUB = 1
     DIAMOND = 2
@@ -108,20 +127,36 @@ def test_aggregate(h):
     event(s)
 
 
-def to_range(m, n: int) -> tuple[int, int]:
-    base = n // m
-    return (base * m, (base + 1) * m)
+@given(text())
+def test_escape(s):
+    c = classes(s)
+    cs = str(c)
+    event(cs)
 
 
-def ukey(lt: list[tuple[int, Any]]) -> Dict[int, list[Any]]:
-    """ukeysort sorts list of tuples based on nth element in tuple and removed
-    duplicated elements from it.
+def classes(s: str) -> list[Tuple[str, Tuple[int, int]]]:
+    l = letters(s)
+    n = numbers(s)
+    p = punctuation(s)
+    o = len(s) - (l + n + p)
+    return [
+        ("letters", to_range(5, l)),
+        ("numbers", to_range(5, n)),
+        ("punctuation", to_range(5, p)),
+        ("others", to_range(5, o)),
+    ]
 
-    Args:
-        lt (List[Tuple])): List of tuples
-    """
-    ret = defaultdict(list)
-    for e in lt:
-        ret[e[0]].append(e[1])
-    ret = dict(ret)
-    return ret
+
+def letters(s: str) -> int:
+    f = filter(lambda c: "A" <= c <= "Z" or "a" <= c <= "z", s)
+    return len(list(f))
+
+
+def numbers(s: str) -> int:
+    f = filter(lambda c: "0" <= c <= "9", s)
+    return len(list(f))
+
+
+def punctuation(s: str) -> int:
+    f = filter(lambda c: c in """.,;:'"-""", s)
+    return len(list(f))
