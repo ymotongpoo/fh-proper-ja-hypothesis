@@ -15,12 +15,13 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Tuple
+from typing import Any, Dict
 
-from hypothesis import event, given
+from hypothesis import event, given, settings
 from hypothesis.strategies import (
     binary,
     booleans,
+    builds,
     characters,
     composite,
     integers,
@@ -32,6 +33,7 @@ from hypothesis.strategies import (
 )
 
 
+## START:dupes_gen
 @composite
 def keys(draw):
     fixed = sampled_from(range(1, 11))
@@ -43,6 +45,9 @@ def vals(draw):
     return draw(booleans() | characters() | integers() | text())
 
 
+## END:dupes_gen
+
+## START:dupes
 # In order to print the statistics from `event`, you need to specify
 # Hypothesis' statistics option: `--hypothesis-show-statistics`.
 # See details here: https://hypothesis.readthedocs.io/en/latest/details.html#statistics
@@ -54,21 +59,30 @@ def test_dupes(kv: list[tuple[int, Any]]):
     event(f"dupes: {range_min}-{range_max}")
 
 
+## END:dupes
+
+## START:collect1
 # TODO: confirm if there's some function that corresponds to Erlang's is_binary/1.
 @given(binary())
-def test_collect1(b):
+def test_collect1(b: bytes):
     size = len(b)
     event(f"size: {size}")
 
 
+## END:collect1
+
+## START:collect2
 # TODO: confirm if there's some function that corresponds to Erlang's is_binary/1.
 @given(binary())
-def test_collect2(b):
+def test_collect2(b: bytes):
     range_min, range_max = to_range(10, len(b))
     event(f"size: {range_min}-{range_max}")
 
 
-def to_range(m, n: int) -> tuple[int, int]:
+## END:collect2
+
+## START:to_range
+def to_range(m: int, n: int) -> tuple[int, int]:
     base = n // m
     return (base * m, (base + 1) * m)
 
@@ -87,6 +101,9 @@ def ukey(lt: list[tuple[int, Any]]) -> Dict[int, list[Any]]:
     return ret
 
 
+## END:to_range
+
+## START:aggregate
 class Suit(Enum):
     CLUB = 1
     DIAMOND = 2
@@ -119,7 +136,7 @@ def hand(draw):
 
 
 @given(hand())
-def test_aggregate(h):
+def test_aggregate(h: list[Card]):
     # converting to str is the work around for events to handle
     # lists/tuples.
     # https://github.com/HypothesisWorks/hypothesis/issues/3393
@@ -127,14 +144,17 @@ def test_aggregate(h):
     event(s)
 
 
+## END:aggregate
+
+## START:char_classes
 @given(text())
-def test_escape(s):
+def test_escape(s: str):
     c = classes(s)
     cs = str(c)
     event(cs)
 
 
-def classes(s: str) -> list[Tuple[str, Tuple[int, int]]]:
+def classes(s: str) -> list[tuple[str, tuple[int, int]]]:
     l = letters(s)
     n = numbers(s)
     p = punctuation(s)
@@ -160,3 +180,47 @@ def numbers(s: str) -> int:
 def punctuation(s: str) -> int:
     f = filter(lambda c: c in """.,;:'"-""", s)
     return len(list(f))
+
+
+## END:char_classes
+
+
+## START:resize
+@given(binary(max_size=150))
+def test_resize(b: bytes):
+    t = to_range(10, len(b))
+    event(str(t))
+
+
+## END:resize
+
+
+## START:profile1
+@dataclass
+class Profile:
+    name: str
+    age: int
+    bio: str
+
+    def __eq__(self, other):
+        return (
+            self.name == other.name and self.age == other.age and self.bio == other.bio
+        )
+
+
+@given(
+    builds(
+        Profile,
+        text(max_size=10),
+        integers(min_value=1, max_value=150),
+        text(max_size=350),
+    )
+)
+@settings(max_examples=1000)
+def test_profile1(p: Profile):
+    name_len = to_range(10, len(p.name))
+    bio_len = to_range(300, len(p.bio))
+    event(f"(name: {name_len}, bio: {bio_len})")
+
+
+## END:profile1
