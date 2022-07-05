@@ -19,6 +19,7 @@ from typing import Any, Dict
 
 from hypothesis import event, given, settings
 from hypothesis.strategies import (
+    DrawFn,
     binary,
     booleans,
     builds,
@@ -216,7 +217,7 @@ class Profile:
         text(max_size=350),
     )
 )
-@settings(max_examples=1000)
+@settings(max_examples=100)
 def test_profile1(p: Profile):
     name_len = to_range(10, len(p.name))
     bio_len = to_range(300, len(p.bio))
@@ -224,3 +225,27 @@ def test_profile1(p: Profile):
 
 
 ## END:profile1
+
+
+## START:profile2
+# TODO: find better ways to set two variables proportional.
+@composite
+def profiles(draw: DrawFn):
+    name = draw(text(max_size=10))
+    name_len = len(name)
+    age = draw(integers(min_value=1, max_value=150))
+    bio_len = 35 * name_len
+    bio = draw(text(min_size=bio_len, max_size=bio_len))
+    return Profile(name, age, bio)
+
+
+@given(profiles())
+@settings(max_examples=100)
+def test_profile2(p: Profile):
+    name_len = to_range(10, len(p.name))
+    bio_len = to_range(300, len(p.bio))
+
+    event(f"(name: {name_len}, bio: {bio_len})")
+
+
+## END:profile2
