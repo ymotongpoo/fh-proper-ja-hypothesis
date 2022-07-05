@@ -36,13 +36,13 @@ from hypothesis.strategies import (
 
 ## START:dupes_gen
 @composite
-def keys(draw):
+def keys(draw: DrawFn) -> int:
     fixed = sampled_from(range(1, 11))
     return draw(one_of(fixed, integers()))
 
 
 @composite
-def vals(draw):
+def vals(draw: DrawFn) -> Any:
     return draw(booleans() | characters() | integers() | text())
 
 
@@ -53,7 +53,7 @@ def vals(draw):
 # Hypothesis' statistics option: `--hypothesis-show-statistics`.
 # See details here: https://hypothesis.readthedocs.io/en/latest/details.html#statistics
 @given(lists(tuples(keys(), vals())))
-def test_dupes(kv: list[tuple[int, Any]]):
+def test_dupes(kv: list[tuple[int, Any]]) -> None:
     m = {k: v for k, v in kv}
     [m[k] for k, _ in kv]  # I want non existing key to be crashed
     range_min, range_max = to_range(5, len(kv) - len(ukey(kv)))
@@ -65,7 +65,7 @@ def test_dupes(kv: list[tuple[int, Any]]):
 ## START:collect1
 # TODO: confirm if there's some function that corresponds to Erlang's is_binary/1.
 @given(binary())
-def test_collect1(b: bytes):
+def test_collect1(b: bytes) -> None:
     size = len(b)
     event(f"size: {size}")
 
@@ -75,7 +75,7 @@ def test_collect1(b: bytes):
 ## START:collect2
 # TODO: confirm if there's some function that corresponds to Erlang's is_binary/1.
 @given(binary())
-def test_collect2(b: bytes):
+def test_collect2(b: bytes) -> None:
     range_min, range_max = to_range(10, len(b))
     event(f"size: {range_min}-{range_max}")
 
@@ -125,19 +125,19 @@ class Card:
 
 
 @composite
-def card(draw):
+def card(draw: DrawFn) -> Card:
     s = draw(sampled_from(Suit))
     n = draw(sampled_from(range(1, 14)))
     return Card(s, n)
 
 
 @composite
-def hand(draw):
+def hand(draw: DrawFn) -> list[Card]:
     return draw(lists(card(), min_size=5, max_size=5))
 
 
 @given(hand())
-def test_aggregate(h: list[Card]):
+def test_aggregate(h: list[Card]) -> None:
     # converting to str is the work around for events to handle
     # lists/tuples.
     # https://github.com/HypothesisWorks/hypothesis/issues/3393
@@ -188,7 +188,7 @@ def punctuation(s: str) -> int:
 
 ## START:resize
 @given(binary(max_size=150))
-def test_resize(b: bytes):
+def test_resize(b: bytes) -> None:
     t = to_range(10, len(b))
     event(str(t))
 
@@ -218,7 +218,7 @@ class Profile:
     )
 )
 @settings(max_examples=100)
-def test_profile1(p: Profile):
+def test_profile1(p: Profile) -> None:
     name_len = to_range(10, len(p.name))
     bio_len = to_range(300, len(p.bio))
     event(f"(name: {name_len}, bio: {bio_len})")
@@ -229,8 +229,9 @@ def test_profile1(p: Profile):
 
 ## START:profile2
 # TODO: find better ways to set two variables proportional.
+# https://stackoverflow.com/q/72863388/515508
 @composite
-def profiles(draw: DrawFn):
+def profiles(draw: DrawFn) -> Profile:
     name = draw(text(max_size=10))
     name_len = len(name)
     age = draw(integers(min_value=1, max_value=150))
@@ -241,10 +242,9 @@ def profiles(draw: DrawFn):
 
 @given(profiles())
 @settings(max_examples=100)
-def test_profile2(p: Profile):
+def test_profile2(p: Profile) -> None:
     name_len = to_range(10, len(p.name))
     bio_len = to_range(300, len(p.bio))
-
     event(f"(name: {name_len}, bio: {bio_len})")
 
 
