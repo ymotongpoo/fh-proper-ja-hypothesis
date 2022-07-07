@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import queue
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
@@ -249,3 +250,15 @@ def test_profile2(p: Profile) -> None:
 
 
 ## END:profile2
+
+
+## START:queue_naive
+@given(lists((vals(), vals())))
+def test_queue_naive(l: list) -> None:
+    q: queue.Queue = queue.Queue()
+    for e in l:
+        q.put(e)
+    assert isinstance(q, queue.Queue)
+
+
+## END:queue_naive
