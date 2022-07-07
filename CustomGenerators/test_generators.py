@@ -253,8 +253,8 @@ def test_profile2(p: Profile) -> None:
 
 
 ## START:queue_naive
-@given(lists((vals(), vals())))
-def test_queue_naive(l: list) -> None:
+@given(lists(tuples(integers(), integers())))
+def test_queue_naive(l: list[tuple[Any, Any]]) -> None:
     q: queue.Queue = queue.Queue()
     for e in l:
         q.put(e)
@@ -262,3 +262,21 @@ def test_queue_naive(l: list) -> None:
 
 
 ## END:queue_naive
+
+
+## START:queue_nicer
+@composite
+def queue_(draw: DrawFn) -> queue.Queue:
+    l: list[tuple[Any, Any]] = draw(lists(tuples(vals(), vals())))
+    q: queue.Queue = queue.Queue()
+    for e in l:
+        q.put(e)
+    return q
+
+
+@given(queue_())
+def test_queue_nicer(q: queue.Queue) -> None:
+    assert isinstance(q, queue.Queue)
+
+
+## END:queue_nicer
