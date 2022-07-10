@@ -27,6 +27,7 @@ from hypothesis.strategies import (
     characters,
     composite,
     integers,
+    just,
     lists,
     one_of,
     sampled_from,
@@ -280,3 +281,20 @@ def test_queue_nicer(q: queue.Queue) -> None:
 
 
 ## END:queue_nicer
+
+## START:text_like
+# ref: https://stackoverflow.com/a/55329132/515508
+# ref: https://stackoverflow.com/q/49827010/515508
+# ref: https://groups.google.com/g/hypothesis-users/c/qvq25iVIZYA/m/uPClNCK2AwAJ
+@composite
+def text_like(draw: DrawFn) -> str:
+    c = integers(min_value=ord("a"), max_value=ord("z"))
+    s = just(ord(" "))
+    nl = just(ord("\n"))
+    p = sampled_from([ord(x) for x in [".", "-", "!", "?", ","]])
+    n = integers(min_value=ord("0"), max_value=ord("9"))
+    l = draw(lists(one_of(c, s, nl, p, n)))
+    return "".join([chr(e) for e in l])
+
+
+## END:text_like
